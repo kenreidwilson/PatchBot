@@ -9,7 +9,7 @@ class Overwatch(Game):
 		Game.__init__(self, name)
 		self.color = 16777215
 		self.thumbnail = "https://i.imgur.com/NDhNeBj.png"
-		
+
 	def get_patch_info(self):
 
 		# Gets source of Overwatch's patch page.
@@ -18,38 +18,38 @@ class Overwatch(Game):
 			source = urlopen(request).read()
 			bsoup = soup(source, "html.parser")
 		except:
-			return "Couldn't connect to " + self.name + "'s website."
-		
+			raise Exception("Couldn't connect to " + self.name + "'s website.")
+
 		try:
 			side_div = bsoup.findAll("div",{"class":"PatchNotesSideNav"})
 		except:
-			return "Error retrieving side_div"
+			raise Exception("Error retrieving side_div")
 
 		# Gets Overwatch's patch title.
 		try:
 			self.title = side_div[0].ul.li.h3.text
 			if self.title is None:
-				return "Error retrieving " + self.name + " title."
+				raise Exception("Could not find " + self.name + " title.")
 		except:
-			return "Error retrieving " + self.name + " title."
+			raise Exception("Error retrieving " + self.name + " title.")
 
 		# Gets Overwatch's patch url.
 		try:
 			self.url = "https://playoverwatch.com/en-us/news/patch-notes/pc/" + side_div[0].ul.li.a["href"]
 			if self.url is None:
-				return "Error retrieving " + self.name + " url."
+				raise Exception("Could not find " + self.name + " url.")
 		except:
-			return "Error retrieving " + self.name + " url."
-		
+			raise Exception("Error retrieving " + self.name + " url.")
+
 		# Gets Overwatch's patch image.
 		try:
 			heading_image_div = bsoup.findAll("div",{"class":"HeadingBanner"})
 			self.image = self.find_between(heading_image_div[0]["style"], "url(", ")")
 			if self.image is None:
-				return "Error retrieving " + self.name + " image."
+				raise Exception("Could not find " + self.name + " image.")
 		except:
-			return "Error retrieving " + self.name + " image."
-		
+			raise Exception("Error retrieving " + self.name + " image.")
+
 		# Gets Overwatch's patch description.
 		try:
 			calloutbox_div = bsoup.findAll("div",{"class":"CalloutBox"})
@@ -61,9 +61,9 @@ class Overwatch(Game):
 					pass
 			self.desc = desc
 			if self.desc is "":
-				return "Error retrieving " + self.name + " description."
+				raise Exception("Could not find " + self.name + " description.")
 		except:
-			return "Error retrieving " + self.name + " description."
+			raise Exception("Error retrieving " + self.name + " description.")
 
 	def find_between(self, s, first, last):
 		start = s.index(first) + len(first)

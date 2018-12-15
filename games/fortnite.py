@@ -18,43 +18,43 @@ class Fortnite(Game):
 			source = urlopen(request).read()
 			bsoup = soup(source, "html.parser")
 		except:
-			return "Couldn't connect to " + self.name + "'s website."
-		
-		# Gets Fortnite's patch title
+			raise Exception("Couldn't connect to " + self.name + "'s website.")
+
+		# Gets Fortnite's patch title.
 		try:
 			self.title = bsoup.title.text
 			if self.title is None:
-				return "Error retrieving " + self.name + " title."
+				raise Exception("Could not find " + self.name + " title.")
 		except:
-			return "Error retrieving " + self.name + " title."
-		
-		# Gets Fortnite's patch URL
+			raise Exception("Error retrieving " + self.name + " title.")
+
+		# Gets Fortnite's patch URL.
 		try:
 			metas = bsoup.findAll("meta",{"data-react-helmet":"true"})
 			self.url = metas[1]["content"]
 			if self.url is None:
-					return "Error retrieving " + self.name + " url."
+				raise Exception("Could not find " + self.name + " url.")
 		except:
-			return "Error retrieving " + self.name + " url."
-		
-		# Gets Fortnite's patch image
+			raise Exception("Error retrieving " + self.name + " url.")
+
+		# Gets Fortnite's patch image.
 		try:
 			image_divs = bsoup.findAll("div",{"class":"background-image"})
 			self.image = self.find_between(image_divs[0]["style"], "background:url(", ")")
 			if self.image is None:
-				return "Error retrieving " + self.name + " image."
+				raise Exception("Could not find " + self.name + " image.")
 		except:
-			return "Error retrieving " + self.name + " image."
-		
-		# Gets Fortnite's patch description
+			raise Exception("Error retrieving " + self.name + " image.")
+
+		# Gets Fortnite's patch description.
 		try:
 			titles = bsoup.findAll("h1")
 			descs = bsoup.findAll("div",{"class":"patch-notes-description"})
 			self.desc = titles[2].text + "\n\n" + descs[0].text
 			if self.desc is None:
-				return "Error retrieving " + self.name + " description."
+				raise Exception("Could not find " + self.name + " description.")
 		except:
-			return "Error retrieving " + self.name + " description."
+			raise Exception("Error retrieving " + self.name + " description.")
 
 	def find_between(self, s, first, last):
 		start = s.index(first) + len(first)

@@ -88,15 +88,15 @@ class Patchbot():
 	def get_updated_games(self):
 		updated_game_list = []
 		for game in self.game_list:
-			current_patch_title = game.title
-			patch_info = game.get_patch_info()
-			new_patch_title = game.title
 			print("[" + str(datetime.datetime.now()) + "]" + " Reinitializing " + game.name)
-			# TODO: Change to use error catch/handle instead of checking if string
-			if type(patch_info) is str:
-				print("[" + str(datetime.datetime.now()) + "]" + " Error reinitializing " + game.name + ": " + patch_info)
-			elif current_patch_title != new_patch_title:
-				updated_game_list.append(game)
+			current_patch_title = game.title
+			try:
+				game.get_patch_info()
+			except Exception as e:
+				print("[" + str(datetime.datetime.now()) + "]" + " Error reinitializing " + game.name + ": " + str(e))
+			else:
+				if current_patch_title != game.title:
+					updated_game_list.append(game)
 		print("[" + str(datetime.datetime.now()) + "]" + " Reinitialized Games\n")
 		return updated_game_list
 
@@ -139,11 +139,10 @@ class Patchbot():
 	def _initialize_patches(self):
 		print("Initializing Games:\n")
 		for game in self.game_list:
-			patch_info = game.get_patch_info()
-			# TODO: get_patch_info needs to throw an error, not return a string
-			# when an error occurs.
-			if type(patch_info) is str:
-				print (game.name + " error initializing: " + patch_info)
+			try:
+				game.get_patch_info()
+			except Exception as e:
+				print (game.name + " error initializing: " + str(e))
 			else:
 				print(game.name + " initialized.")
 		print("\nDone Initializing\n")
