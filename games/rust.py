@@ -9,7 +9,7 @@ class Rust(Game):
 		Game.__init__(self, name)
 		self.color = 13517355
 		self.thumbnail = "https://i.imgur.com/WWZIaE8.jpg"
-			
+
 	def get_patch_info(self):
 
 		# Gets source of Facepunch's blog.
@@ -18,7 +18,7 @@ class Rust(Game):
 			source = urlopen(request).read()
 		except:
 			return "Couldn't connect to " + self.name + "'s website."
-		
+
 		# Gets divs in the monthgroup div
 		try:
 			div_monthgroup = soup(source, "html.parser").findAll("div",{"class":"columns monthgroup"})
@@ -41,7 +41,7 @@ class Rust(Game):
 				return "Error retrieving " + self.name + " title."
 		except:
 			return "Error retrieving " + self.name + " title."
-		
+
 		# Gets source of Rust's current patch page.
 		try:
 			request = Request(self.url, headers={'User-Agent': 'Mozilla/5.0'})
@@ -54,7 +54,7 @@ class Rust(Game):
 			div_container = bsoup.findAll("div",{"class":"container content"})
 		except:
 			return "Error retrieving container"
-		
+
 		# Gets Rust's patch image.
 		try:
 			section_style_string = bsoup.findAll("div",{"id":"content"})[0].section["style"]

@@ -1,8 +1,4 @@
-import os
-import datetime
-import discord
-import aiohttp
-import json
+import os, json, datetime, discord, aiohttp
 from pprint import pprint
 from discord.ext import commands
 from discord.ext.commands import Bot
@@ -13,8 +9,14 @@ from games.fortnite import Fortnite
 from games.csgo import CSGO
 from games.poe import Path_of_Exile
 
+'''
+The Patchbot Class.
+'''
 class Patchbot():
 
+	'''
+	Initializes the Patchbot object.
+	'''
 	def __init__(self):
 		self.game_list = []
 		self._add_games()
@@ -22,7 +24,9 @@ class Patchbot():
 		self.bot = commands.Bot(command_prefix='!')
 		self._initialize_patches()
 
-	# Adds all games to self.game_list
+	'''
+	Adds games objects to self.game_list.
+	'''
 	def _add_games(self):
 		self.add_game(League("League of Legends"))
 		self.add_game(Fortnite("Fortnite"))
@@ -31,11 +35,18 @@ class Patchbot():
 		self.add_game(Rust("Rust"))
 		self.add_game(Path_of_Exile("Path of Exile"))
 
-	# Adds a game to self.game_list
+	'''
+	Adds a game to self.game_list.
+	'''
 	def add_game(self, game):
+		# TODO: add a check to see if the game is a child class of a game object.
 		self.game_list.append(game)
 
-	# Initializes Config -> config.json.
+	'''
+	Loads config data from config.json, located in the current working dir.
+	If config.json doesn't exist, get_config generates a config.json file with
+	data based on the games in self.game_list.
+	'''
 	def get_config(self):
 		try:
 			with open("config.json", "r") as jsonFile:
@@ -47,13 +58,10 @@ class Patchbot():
 				data = json.load(jsonFile)
 			return data
 
-	# Reinitializes Config -> config.json
-	def reinitialize_config(self):
-		with open("config.json", "r") as jsonFile:
-			data = json.load(jsonFile)
-		self.data = data
-
-	# Generates config.json for first use of bot or if config.json is deleted.
+	'''
+	Generates a config.json file for first use of bot or if config.json was
+	deleted.
+	'''
 	def _generate_config(self):
 		data = {}
 		data["games"] = {}
@@ -61,26 +69,42 @@ class Patchbot():
 			data["games"][game.name] = {}
 			data["games"][game.name]["channels"] = [""]
 		data["token"] = ""
-		# TODO: Needs to handle permissions error
+		# TODO: Needs to handle permissions error.
 		with open(os.path.dirname(os.path.realpath(__file__)) +  os.sep + "config.json", "w") as jsonFile:
 			json.dump(data, jsonFile, indent=4)
 
-	# Returns a list of games that have updated patch info.
+	'''
+	Reloads config data from config.json.
+	'''
+	def reinitialize_config(self):
+		with open("config.json", "r") as jsonFile:
+			data = json.load(jsonFile)
+		self.data = data
+
+	'''
+	Returns a list of game objects whos current patch title doesn't match their
+	new patch title after updating their patch information.
+	'''
 	def get_updated_games(self):
 		updated_game_list = []
 		for game in self.game_list:
-			game_title = game.title
+			current_patch_title = game.title
 			patch_info = game.get_patch_info()
+			new_patch_title = game.title
 			print("[" + str(datetime.datetime.now()) + "]" + " Reinitializing " + game.name)
 			# TODO: Change to use error catch/handle instead of checking if string
 			if type(patch_info) is str:
 				print("[" + str(datetime.datetime.now()) + "]" + " Error reinitializing " + game.name + ": " + patch_info)
-			elif game.title != game_title:
+			elif current_patch_title != new_patch_title:
 				updated_game_list.append(game)
 		print("[" + str(datetime.datetime.now()) + "]" + " Reinitialized Games\n")
 		return updated_game_list
 
-	# Returns a list of games that the specified channel is subscribed to.
+	'''
+	Returns a list of games that the specified channel is subscribed to.
+	"Subscribed" meaning the channel name is within a list of channel names
+	under the game name in config.json.
+	'''
 	def get_channel_games(self, channel):
 		channel_game_list = []
 		for game in self.game_list:
@@ -89,40 +113,54 @@ class Patchbot():
 					channel_game_list.append(game)
 		return channel_game_list
 
-	# Returns a list of channels that are subscribed to a specified game.
+	'''
+	Returns a list of channels that are subscribed to a specified game.
+	"Subscribed" meaning the channel name is within a list of channel names
+	under the game name in config.json.
+	'''
 	def get_game_channels(self, game):
 		game_channel_list = []
 		try:
 			channel_list = self.bot.get_all_channels()
+		# TODO: This needs to be handled in run.py.
 		except (discord.DiscordException, discord.ClientException, discord.HTTPException, discord.NotFound):
 			print('get_game_channels: Error connecting to Discord')
 			return game_channel_list
-
 			for channel in channel_list:
 				for channel_name in self.data['games'][game.name]['channels']:
 					if channel_name == channel.name:
 						game_channel_list.append(channel)
 			return game_channel_list
 
-	# Initializes Game objects by calling their get_patch_info function.
+	'''
+	Initializes all Game objects in self.game_list by calling their
+	get_patch_info function.
+	'''
 	def _initialize_patches(self):
 		print("Initializing Games:\n")
 		for game in self.game_list:
 			patch_info = game.get_patch_info()
+			# TODO: get_patch_info needs to throw an error, not return a string
+			# when an error occurs.
 			if type(patch_info) is str:
 				print (game.name + " error initializing: " + patch_info)
 			else:
 				print(game.name + " initialized.")
 		print("\nDone Initializing\n")
 
-	# Returns an embed patch message for a specified game.
+	'''
+	Returns a discord embed object that contains the patch message for the
+	specified game.
+	'''
 	def get_patch_message(self, game):
 		embed = discord.Embed()
+		# A patch message must at least have a title and a link.
 		if game.title is None or game.url is None:
 			embed.title = "Error occurred when retrieving " + game.name + " patch notes"
 			return embed
 		embed.title = game.name + " - " + game.title
 		embed.url = game.url
+		# The patch description should not exceed 400 characters.
 		if game.desc is not None:
 			desc = ""
 			game_strings = game.desc.split("\n")
@@ -140,6 +178,10 @@ class Patchbot():
 			embed.set_image(url=game.image)
 		return embed
 
+	'''
+	Returns a discord embed object that contains about information about Patchbot.
+	'''
+	# TODO: Make not asynchronous.
 	async def get_embed_message(self):
 		embed_message = discord.Embed()
 		embed_message.title = 'Wilsøn\'s PatchBot'
