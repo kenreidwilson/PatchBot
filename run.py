@@ -33,10 +33,13 @@ patches have their embed patch message pushed to their subscribed channels.
 async def push_game_updates():
 	await patchbot.bot.wait_until_ready()
 	while not patchbot.bot.is_closed:
-		await asyncio.sleep(300)
+		await asyncio.sleep(10)
 		for game in patchbot.get_updated_games():
-			for channel in patchbot.get_game_channels(game):
-				await patchbot.bot.send_message(channel, embed=patchbot.get_patch_message(game))
+			try:
+				for channel in patchbot.get_game_channels(game):
+					await patchbot.bot.send_message(channel, embed=patchbot.get_patch_message(game))
+			except (discord.DiscordException, discord.ClientException, discord.HTTPException, discord.NotFound):
+				print("Could not connect to Discord when displaying " + game.name + " new patch information.")
 
 '''
 Handles Patchbot commands sent as messages on a discord server.

@@ -106,12 +106,12 @@ class Patchbot():
 	under the game name in config.json.
 	'''
 	def get_channel_games(self, channel):
-		channel_game_list = []
+		game_list = []
 		for game in self.game_list:
 			for channel_name in self.data['games'][game.name]['channels']:
 				if channel_name == channel.name:
-					channel_game_list.append(game)
-		return channel_game_list
+					game_list.append(game)
+		return game_list
 
 	'''
 	Returns a list of channels that are subscribed to a specified game.
@@ -119,18 +119,12 @@ class Patchbot():
 	under the game name in config.json.
 	'''
 	def get_game_channels(self, game):
-		game_channel_list = []
-		try:
-			channel_list = self.bot.get_all_channels()
-		# TODO: This needs to be handled in run.py.
-		except (discord.DiscordException, discord.ClientException, discord.HTTPException, discord.NotFound):
-			print('get_game_channels: Error connecting to Discord')
-			return game_channel_list
-			for channel in channel_list:
-				for channel_name in self.data['games'][game.name]['channels']:
-					if channel_name == channel.name:
-						game_channel_list.append(channel)
-			return game_channel_list
+		channel_list = []
+		for channel in self.bot.get_all_channels():
+			for channel_name in self.data['games'][game.name]['channels']:
+				if channel_name == channel.name:
+					channel_list.append(channel)
+		return channel_list
 
 	'''
 	Initializes all Game objects in self.game_list by calling their
