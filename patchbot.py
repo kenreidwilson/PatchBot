@@ -180,8 +180,7 @@ class Patchbot():
 	'''
 	Returns a discord embed object that contains about information about Patchbot.
 	'''
-	# TODO: Make not asynchronous.
-	async def get_embed_message(self):
+	def get_embed_message(self, dev):
 		embed_message = discord.Embed()
 		embed_message.title = 'Wilsøn\'s PatchBot'
 		embed_message.color = 16200039
@@ -190,6 +189,5 @@ class Patchbot():
 		embed_message.add_field(name='Source', value='https://github.com/Wils0248n/Patchbot', inline=False)
 		embed_message.set_image(url='https://i.imgur.com/DNFHDPr.png')
 		embed_message.set_thumbnail(url='https://i.imgur.com/o74macK.png')
-		dev = await self.bot.get_user_info(259624839604731906)
 		embed_message.set_footer(text = 'Developer: ' + dev.name + "#" + dev.discriminator)
 		return embed_message

@@ -75,7 +75,8 @@ async def on_message(message):
 	from.
 	'''
 	if message.content == '!patchbot':
-		await patchbot.bot.send_message(message.channel, embed=await patchbot.get_embed_message())
+		dev = await patchbot.bot.get_user_info(259624839604731906)
+		await patchbot.bot.send_message(message.channel, embed=patchbot.get_embed_message(dev))
 
 	'''
 	Handles !patchbot reload command.
