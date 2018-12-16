@@ -33,7 +33,7 @@ patches have their embed patch message pushed to their subscribed channels.
 async def push_game_updates():
 	await patchbot.bot.wait_until_ready()
 	while not patchbot.bot.is_closed:
-		await asyncio.sleep(10)
+		await asyncio.sleep(300)
 		for game in patchbot.get_updated_games():
 			try:
 				for channel in patchbot.get_game_channels(game):
