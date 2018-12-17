@@ -1,4 +1,4 @@
-import discord, asyncio, time, aiohttp
+import discord, asyncio, time, aiohttp, sys
 from aiohttp import errors
 from patchbot import Patchbot
 
@@ -8,22 +8,30 @@ patchbot = Patchbot()
 Initializes patch information and starts the bot.
 '''
 def main():
-	# TODO: Check if bot token was passed as a parameter and add it to config.json.
-	if patchbot.data['token'] == "":
-		print("\nEnter bot token in \"config.json\", located in this script's directory\n")
-	else:
-		while not patchbot.bot.is_closed:
-			try:
-				push_game_updates_task = patchbot.bot.loop.create_task(push_game_updates())
-				patchbot.bot.loop.run_until_complete(patchbot.bot.start(patchbot.data['token']))
-			except aiohttp.errors.ClientOSError:
-				print("Could not connect to Discord, reconnecting...")
-				push_game_updates_task.cancel()
-				time.sleep(10)
-			except RuntimeError as e:
-				print("RuntimeError occured:\n\n" + str(e) + "\n\n")
-				push_game_updates_task.cancel()
-				time.sleep(60)
+	while not patchbot.bot.is_closed:
+		try:
+			push_game_updates_task = patchbot.bot.loop.create_task(push_game_updates())
+			patchbot.bot.loop.run_until_complete(patchbot.bot.start(sys.argv[1]))
+		except aiohttp.errors.ClientOSError:
+			print("Could not connect to Discord, reconnecting...")
+			push_game_updates_task.cancel()
+			time.sleep(10)
+		except RuntimeError as e:
+			print("RuntimeError occured:\n\n" + str(e) + "\n\n")
+			push_game_updates_task.cancel()
+			time.sleep(60)
+		except IndexError:
+			print("You must enter a bot token.\n")
+			print("Usage: python3 run.py <bot-token>")
+			push_game_updates_task.cancel()
+			sys.exit(1)
+		except discord.errors.LoginFailure:
+			print("Invalid bot token.\n")
+			push_game_updates_task.cancel()
+			sys.exit(1)
+		except Exception as e:
+			print("Error Occured:\n\n" + str(e) + "\n\n")
+			time.sleep(10)
 
 '''
 Checks if a patch has been released for all games in patchbot.game_list.

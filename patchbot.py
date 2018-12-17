@@ -68,7 +68,6 @@ class Patchbot():
 		for game in self.game_list:
 			data["games"][game.name] = {}
 			data["games"][game.name]["channels"] = [""]
-		data["token"] = ""
 		# TODO: Needs to handle permissions error.
 		with open(os.path.dirname(os.path.realpath(__file__)) +  os.sep + "config.json", "w") as jsonFile:
 			json.dump(data, jsonFile, indent=4)
