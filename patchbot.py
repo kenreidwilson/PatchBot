@@ -201,7 +201,7 @@ def main():
 			time.sleep(60)
 		except IndexError:
 			print("You must enter a bot token.\n")
-			print("Usage: python3 run.py <bot-token>")
+			print("Usage: python3 patchbot.py <bot-token>")
 			push_game_updates_task.cancel()
 			sys.exit(1)
 		except discord.errors.LoginFailure:
