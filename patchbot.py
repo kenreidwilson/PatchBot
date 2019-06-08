@@ -17,7 +17,6 @@ class Patchbot():
 		self._add_games()
 		self.data = self.get_config()
 		self.bot = commands.Bot(command_prefix='!')
-		self._initialize_patches()
 
 	def _add_games(self):
 		"""
@@ -120,7 +119,7 @@ class Patchbot():
 					channel_list.append(channel)
 		return channel_list
 
-	def _initialize_patches(self):
+	def initialize_patches(self):
 		"""
 		Initializes all Game objects in self.game_list by calling their
 		get_patch_info function.
@@ -186,25 +185,25 @@ def main():
 	"""
 	Initializes patch information and starts the bot.
 	"""
-	while not patchbot.bot.is_closed:
+	while True:
 		try:
 			push_game_updates_task = patchbot.bot.loop.create_task(push_game_updates())
 			patchbot.bot.loop.run_until_complete(patchbot.bot.start(sys.argv[1]))
-		except aiohttp.errors.ClientOSError:
-			print("Could not connect to Discord, reconnecting...")
-			push_game_updates_task.cancel()
-			time.sleep(10)
+		#except aiohttp.errors.ClientOSError:
+			#print("Could not connect to Discord, reconnecting...")
+			#push_game_updates_task.cancel()
+			#time.sleep(10)
 		except RuntimeError as e:
 			print("RuntimeError occured:\n\n" + str(e) + "\n\n")
 			push_game_updates_task.cancel()
 			time.sleep(60)
 		except IndexError:
-			print("You must enter a bot token.\n")
+			print("You must enter a bot token.")
 			print("Usage: python3 patchbot.py <bot-token>")
 			push_game_updates_task.cancel()
 			sys.exit(1)
 		except discord.errors.LoginFailure:
-			print("Invalid bot token.\n")
+			print("Discord login failed: Invalid bot token.")
 			push_game_updates_task.cancel()
 			sys.exit(1)
 
@@ -220,7 +219,7 @@ async def push_game_updates():
 		for game in patchbot.get_updated_games():
 			try:
 				for channel in patchbot.get_game_channels(game):
-					await patchbot.bot.send_message(channel, embed=patchbot.get_patch_message(game))
+					await channel.send(embed=patchbot.get_patch_message(game))
 			except (discord.DiscordException, discord.ClientException, discord.HTTPException, discord.NotFound):
 				print("Could not connect to Discord when displaying " + game.name + " new patch information.")
 
@@ -238,10 +237,10 @@ async def on_message(message):
 		"""
 		channel_games = patchbot.get_channel_games(message.channel)
 		if len(channel_games) is 0:
-			await patchbot.bot.send_message(message.channel, message.channel.name + " is not subscribed to any games.")
+			await message.channel.send(message.channel.name + " is not subscribed to any games.")
 		else:
 			for game in channel_games:
-				await patchbot.bot.send_message(message.channel, embed=patchbot.get_patch_message(game))
+				await message.channel.send(embed=patchbot.get_patch_message(game))
 
 	# TODO: Handle game names with spaces correctly.
 	if message.content.startswith('!patch '):
@@ -252,9 +251,9 @@ async def on_message(message):
 		"""
 		for game in patchbot.game_list:
 			if message.content.split(" ")[1].lower() == game.name.split(" ")[0].lower():
-				await patchbot.bot.send_message(message.channel, embed=patchbot.get_patch_message(game))
+				await message.channel.send(embed=patchbot.get_patch_message(game))
 				return
-		await patchbot.bot.send_message(message.channel, "Could not find patch info for " + message.content.split(" ")[1])
+		await message.channel.send("Could not find patch info for " + message.content.split(" ")[1])
 
 	if message.content == '!patchbot':
 		"""
@@ -262,8 +261,8 @@ async def on_message(message):
 		Sends patchbot's embed about message to the channel that the message came
 		from.
 		"""
-		dev = await patchbot.bot.get_user_info(259624839604731906)
-		await patchbot.bot.send_message(message.channel, embed=patchbot.get_embed_message(dev))
+		dev = patchbot.bot.get_user(259624839604731906)
+		await message.channel.send(embed=patchbot.get_embed_message(dev))
 
 	if message.content.startswith('!patchbot '):
 		"""
@@ -272,20 +271,15 @@ async def on_message(message):
 		"""
 		if 'reload' in message.content:
 			patchbot.reinitialize_config()
-			await patchbot.bot.send_message(message.channel, "Reinitialized config.json")
+			await message.channel.send("Reinitialized config.json")
 
 @patchbot.bot.event
 async def on_ready():
 	"""
 	Handles when Patchbot is ready.
 	"""
+	patchbot.initialize_patches()
 	print(patchbot.bot.user.name + " is initialized.\n")
-	await patchbot.bot.change_presence(game=discord.Game(name="Patchbot | !patchbot"))
+	await patchbot.bot.change_presence(activity=discord.Activity(game=discord.Game(name="Patchbot | !patchbot")))
 
-if __name__ == '__main__':
-	while True:
-		try:
-			main()
-		except Exception as e:
-			print("Error Occured:\n\n" + str(e) + "\n\n")
-			time.sleep(5)
+main()
