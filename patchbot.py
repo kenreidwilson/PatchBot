@@ -1,5 +1,4 @@
 import asyncio, aiohttp, datetime, discord, json, os, time, sys
-from aiohttp import errors
 from pprint import pprint
 from discord.ext import commands
 from discord.ext.commands import Bot
@@ -45,12 +44,12 @@ class Patchbot():
 		data based on the games in self.game_list.
 		"""
 		try:
-			with open("config.json", "r") as jsonFile:
+			with open("config" + os.sep + "config.json", "r") as jsonFile:
 				data = json.load(jsonFile)
 			return data
 		except FileNotFoundError:
 			self._generate_config()
-			with open("config.json", "r") as jsonFile:
+			with open("config" + os.sep + "config.json", "r") as jsonFile:
 				data = json.load(jsonFile)
 			return data
 
@@ -65,14 +64,14 @@ class Patchbot():
 			data["games"][game.name] = {}
 			data["games"][game.name]["channels"] = [""]
 		# TODO: Needs to handle permissions error.
-		with open(os.path.dirname(os.path.realpath(__file__)) +  os.sep + "config.json", "w") as jsonFile:
+		with open(os.path.dirname(os.path.realpath(__file__)) +  os.sep + "config" + os.sep + "config.json", "w") as jsonFile:
 			json.dump(data, jsonFile, indent=4)
 
 	def reinitialize_config(self):
 		"""
 		Reloads config data from config.json.
 		"""
-		with open("config.json", "r") as jsonFile:
+		with open("config" + os.sep + "config.json", "r") as jsonFile:
 			data = json.load(jsonFile)
 		self.data = data
 

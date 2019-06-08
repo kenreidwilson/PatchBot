@@ -1,0 +1,34 @@
+{
+    "games": {
+        "League of Legends": {
+            "channels": [
+                "league-of-legends"
+            ]
+        },
+        "Fortnite": {
+            "channels": [
+                "fortnite"
+            ]
+        },
+        "CSGO": {
+            "channels": [
+                "csgo"
+            ]
+        },
+        "Overwatch": {
+            "channels": [
+                "overwatch"
+            ]
+        },
+        "Rust": {
+            "channels": [
+                "rust"
+            ]
+        },
+        "Path of Exile": {
+            "channels": [
+                "poe"
+            ]
+        }
+    }
+}
