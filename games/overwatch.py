@@ -1,12 +1,13 @@
 import urllib
 from urllib.request import Request, urlopen
-from games.game import Game
 from bs4 import BeautifulSoup as soup
 
-class Overwatch(Game):
+class Overwatch():
 
-	def __init__(self, name):
-		Game.__init__(self, name)
+	def __init__(self):
+		self.name = "Overwatch"
+		self.names = ["overwatch"]
+		self.patch = {"title": None, "url": None, "desc": None, "image": None}
 		self.color = 16777215
 		self.thumbnail = "https://i.imgur.com/NDhNeBj.png"
 
@@ -27,16 +28,16 @@ class Overwatch(Game):
 
 		# Gets Overwatch's patch title.
 		try:
-			self.title = side_div[0].ul.li.h3.text
-			if self.title is None:
+			self.patch["title"] = side_div[0].ul.li.h3.text
+			if self.patch["title"] is None:
 				raise Exception("Could not find " + self.name + " title.")
 		except:
 			raise Exception("Error retrieving " + self.name + " title.")
 
 		# Gets Overwatch's patch url.
 		try:
-			self.url = "https://playoverwatch.com/en-us/news/patch-notes/pc/" + side_div[0].ul.li.a["href"]
-			if self.url is None:
+			self.patch["url"] = "https://playoverwatch.com/en-us/news/patch-notes/pc/" + side_div[0].ul.li.a["href"]
+			if self.patch["url"] is None:
 				raise Exception("Could not find " + self.name + " url.")
 		except:
 			raise Exception("Error retrieving " + self.name + " url.")
@@ -44,8 +45,8 @@ class Overwatch(Game):
 		# Gets Overwatch's patch image.
 		try:
 			heading_image_div = bsoup.findAll("div",{"class":"HeadingBanner"})
-			self.image = self.find_between(heading_image_div[0]["style"], "url(", ")")
-			if self.image is None:
+			self.patch["image"] = self.find_between(heading_image_div[0]["style"], "url(", ")")
+			if self.patch["image"] is None:
 				raise Exception("Could not find " + self.name + " image.")
 		except:
 			raise Exception("Error retrieving " + self.name + " image.")
@@ -59,8 +60,8 @@ class Overwatch(Game):
 					desc = desc + div.p.text + "\n"
 				except AttributeError:
 					pass
-			self.desc = desc
-			if self.desc is "":
+			self.patch["desc"] = desc
+			if self.patch["desc"] is "":
 				raise Exception("Could not find " + self.name + " description.")
 		except:
 			raise Exception("Error retrieving " + self.name + " description.")

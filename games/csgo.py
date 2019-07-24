@@ -1,12 +1,13 @@
 import urllib
 from urllib.request import Request, urlopen
-from games.game import Game
 from bs4 import BeautifulSoup as soup
 
-class CSGO(Game):
+class CSGO():
 
-	def __init__(self, name):
-		Game.__init__(self, name)
+	def __init__(self):
+		self.name = "Counter Strike: Global Offensive"
+		self.names = ["csgo", "cs"]
+		self.patch = {"title": None, "url": None, "desc": None, "image": None}
 		self.color = 16744448
 		self.thumbnail = "https://i.imgur.com/OViQbBo.png"
 
@@ -23,16 +24,16 @@ class CSGO(Game):
 
 		# Gets CSGO's patch title.
 		try:
-			self.title = main_blog_div[0].div.div.h2.a.contents[0]
-			if self.title is None:
+			self.patch["title"] = main_blog_div[0].div.div.h2.a.contents[0]
+			if self.patch["title"] is None:
 				raise Exception("Could not find " + self.name + " title.")
 		except:
 			raise Exception("Error retrieving " + self.name + " title.")
 
 		# Gets CSGO's patch url.
 		try:
-			self.url = main_blog_div[0].div.div.h2.a["href"]
-			if self.url is None:
+			self.patch["url"] = main_blog_div[0].div.div.h2.a["href"]
+			if self.patch["url"] is None:
 				raise Exception("Could not find " + self.name + " url.")
 		except:
 			raise Exception("Error retrieving " + self.name + " url.")
@@ -40,8 +41,8 @@ class CSGO(Game):
 		# Gets CSGO's patch description.
 		try:
 			inner_post_ps = main_blog_div[0].div.div.findAll("p")
-			self.desc = inner_post_ps[1].text
-			if self.desc is None:
+			self.patch["desc"] = inner_post_ps[1].text
+			if self.patch["desc"] is None:
 				raise Exception("Could not find " + self.name + " description.")
 		except:
 			raise Exception("Error retrieving " + self.name + " description.")

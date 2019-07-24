@@ -14,27 +14,20 @@ class Patchbot():
 		Initializes the Patchbot object.
 		"""
 		self.game_list = []
-		self._add_games()
+		self.add_games()
 		self.data = self.get_config()
 		self.bot = commands.Bot(command_prefix='!')
 
-	def _add_games(self):
+	def add_games(self):
 		"""
 		Adds games objects to self.game_list.
 		"""
-		self.add_game(League("League of Legends"))
-		self.add_game(Fortnite("Fortnite"))
-		self.add_game(CSGO("CSGO"))
-		self.add_game(Overwatch("Overwatch"))
-		self.add_game(Rust("Rust"))
-		self.add_game(Path_of_Exile("Path of Exile"))
-
-	# TODO: add a check to see if the game is a child class of a game object.
-	def add_game(self, game):
-		"""
-		Adds a game to self.game_list.
-		"""
-		self.game_list.append(game)
+		self.game_list.append(League())
+		self.game_list.append(Fortnite())
+		self.game_list.append(CSGO())
+		self.game_list.append(Overwatch())
+		self.game_list.append(Rust())
+		self.game_list.append(Path_of_Exile())
 
 	def get_config(self):
 		"""
@@ -47,12 +40,12 @@ class Patchbot():
 				data = json.load(jsonFile)
 			return data
 		except FileNotFoundError:
-			self._generate_config()
+			self.generate_config()
 			with open("config" + os.sep + "config.json", "r") as jsonFile:
 				data = json.load(jsonFile)
 			return data
 
-	def _generate_config(self):
+	def generate_config(self):
 		"""
 		Generates a config.json file for first use of bot or if config.json was
 		deleted.
@@ -82,13 +75,13 @@ class Patchbot():
 		updated_game_list = []
 		for game in self.game_list:
 			print("[" + str(datetime.datetime.now()) + "]" + " Reinitializing " + game.name)
-			current_patch_title = game.title
+			current_patch_title = game.patch["title"]
 			try:
 				game.get_patch_info()
 			except Exception as e:
 				print("[" + str(datetime.datetime.now()) + "]" + " Error reinitializing " + game.name + ": " + str(e))
 			else:
-				if current_patch_title != game.title:
+				if current_patch_title != game.patch["title"]:
 					updated_game_list.append(game)
 		print("[" + str(datetime.datetime.now()) + "]" + " Reinitialized Games\n")
 		return updated_game_list
@@ -141,15 +134,15 @@ class Patchbot():
 		"""
 		embed = discord.Embed()
 		# A patch message must at least have a title and a link.
-		if game.title is None or game.url is None:
+		if game.patch["title"] is None or game.patch["url"] is None:
 			embed.title = "Error occurred when retrieving " + game.name + " patch notes"
 			return embed
-		embed.title = game.name + " - " + game.title
-		embed.url = game.url
+		embed.title = game.name + " - " + game.patch["title"]
+		embed.url = game.patch["url"]
 		# The patch description should not exceed 400 characters.
-		if game.desc is not None:
+		if game.patch["desc"] is not None:
 			desc = ""
-			game_strings = game.desc.split("\n")
+			game_strings = game.patch["desc"].split("\n")
 			for string in game_strings:
 				desc = desc + string + "\n"
 				if len(desc) > 400:
@@ -160,8 +153,8 @@ class Patchbot():
 			embed.color = game.color
 		if game.thumbnail is not None:
 			embed.set_thumbnail(url=game.thumbnail)
-		if game.image is not None:
-			embed.set_image(url=game.image)
+		if game.patch["image"] is not None:
+			embed.set_image(url=game.patch["image"])
 		return embed
 
 	def get_embed_message(self, dev):
@@ -193,10 +186,10 @@ def main():
 			#print("Could not connect to Discord, reconnecting...")
 			#push_game_updates_task.cancel()
 			#time.sleep(10)
-		except RuntimeError as e:
-			print("RuntimeError occured:\n\n" + str(e) + "\n\n")
-			push_game_updates_task.cancel()
-			time.sleep(60)
+		#except RuntimeError as e:
+			#print("RuntimeError occured:\n\n" + str(e) + "\n\n")
+			#push_game_updates_task.cancel()
+			#time.sleep(60)
 		except IndexError:
 			print("You must enter a bot token.")
 			print("Usage: python3 patchbot.py <bot-token>")
@@ -206,6 +199,11 @@ def main():
 			print("Discord login failed: Invalid bot token.")
 			push_game_updates_task.cancel()
 			sys.exit(1)
+		except KeyboardInterrupt:
+			print("\nExitting Gracefully")
+			push_game_updates_task.cancel()
+			patchbot.bot.loop.run_until_complete(patchbot.bot.close())
+			sys.exit(0)
 
 async def push_game_updates():
 	"""
@@ -250,7 +248,7 @@ async def on_message(message):
 		the channel that the message came from.
 		"""
 		for game in patchbot.game_list:
-			if message.content.split(" ")[1].lower() == game.name.split(" ")[0].lower():
+			if message.content.split(" ")[1].lower() in game.names:
 				await message.channel.send(embed=patchbot.get_patch_message(game))
 				return
 		await message.channel.send("Could not find patch info for " + message.content.split(" ")[1])
@@ -278,8 +276,9 @@ async def on_ready():
 	"""
 	Handles when Patchbot is ready.
 	"""
+	print(patchbot.bot.user.name + " is online.\n")
 	patchbot.initialize_patches()
-	print(patchbot.bot.user.name + " is initialized.\n")
+	# TODO: Presence not showing.
 	await patchbot.bot.change_presence(activity=discord.Activity(game=discord.Game(name="Patchbot | !patchbot")))
 
 main()

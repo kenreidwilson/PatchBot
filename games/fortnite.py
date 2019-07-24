@@ -1,12 +1,13 @@
 import urllib
 from urllib.request import Request, urlopen
-from games.game import Game
 from bs4 import BeautifulSoup as soup
 
-class Fortnite(Game):
+class Fortnite():
 
-	def __init__(self, name):
-		Game.__init__(self, name)
+	def __init__(self):
+		self.name = "Fortnite"
+		self.names = ["fortnite"]
+		self.patch = {"title": None, "url": None, "desc": None, "image": None}
 		self.color = 6304630
 		self.thumbnail = "https://i.imgur.com/YxrgI30.jpg"
 
@@ -22,8 +23,8 @@ class Fortnite(Game):
 
 		# Gets Fortnite's patch title.
 		try:
-			self.title = bsoup.title.text
-			if self.title is None:
+			self.patch["title"] = bsoup.title.text
+			if self.patch["title"] is None:
 				raise Exception("Could not find " + self.name + " title.")
 		except:
 			raise Exception("Error retrieving " + self.name + " title.")
@@ -31,8 +32,8 @@ class Fortnite(Game):
 		# Gets Fortnite's patch URL.
 		try:
 			metas = bsoup.findAll("meta",{"data-react-helmet":"true"})
-			self.url = metas[1]["content"]
-			if self.url is None:
+			self.patch["url"] = metas[1]["content"]
+			if self.patch["url"] is None:
 				raise Exception("Could not find " + self.name + " url.")
 		except:
 			raise Exception("Error retrieving " + self.name + " url.")
@@ -40,8 +41,8 @@ class Fortnite(Game):
 		# Gets Fortnite's patch image.
 		try:
 			image_divs = bsoup.findAll("div",{"class":"background-image"})
-			self.image = self.find_between(image_divs[0]["style"], "background:url(", ")")
-			if self.image is None:
+			self.patch["image"] = self.find_between(image_divs[0]["style"], "background:url(", ")")
+			if self.patch["image"] is None:
 				raise Exception("Could not find " + self.name + " image.")
 		except:
 			raise Exception("Error retrieving " + self.name + " image.")
@@ -50,8 +51,8 @@ class Fortnite(Game):
 		try:
 			titles = bsoup.findAll("h1")
 			descs = bsoup.findAll("div",{"class":"patch-notes-description"})
-			self.desc = titles[2].text + "\n\n" + descs[0].text
-			if self.desc is None:
+			self.patch["desc"] = titles[2].text + "\n\n" + descs[0].text
+			if self.patch["desc"] is None:
 				raise Exception("Could not find " + self.name + " description.")
 		except:
 			raise Exception("Error retrieving " + self.name + " description.")
