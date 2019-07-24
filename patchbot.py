@@ -15,7 +15,7 @@ class Patchbot():
 		"""
 		self.game_list = []
 		self.add_games()
-		self.data = self.get_config()
+		self.config = self.get_config()
 		self.bot = commands.Bot(command_prefix='!')
 
 	def add_games(self):
@@ -65,7 +65,7 @@ class Patchbot():
 		"""
 		with open("config" + os.sep + "config.json", "r") as jsonFile:
 			data = json.load(jsonFile)
-		self.data = data
+		self.config = data
 
 	def get_updated_games(self):
 		"""
@@ -74,16 +74,16 @@ class Patchbot():
 		"""
 		updated_game_list = []
 		for game in self.game_list:
-			print("[" + str(datetime.datetime.now()) + "]" + " Reinitializing " + game.name)
+			print("Reinitializing " + game.name)
 			current_patch_title = game.patch["title"]
 			try:
 				game.get_patch_info()
 			except Exception as e:
-				print("[" + str(datetime.datetime.now()) + "]" + " Error reinitializing " + game.name + ": " + str(e))
+				print("Error reinitializing " + game.name + ": " + str(e))
 			else:
 				if current_patch_title != game.patch["title"]:
 					updated_game_list.append(game)
-		print("[" + str(datetime.datetime.now()) + "]" + " Reinitialized Games\n")
+		print("\nReinitialized Games\n")
 		return updated_game_list
 
 	def get_channel_games(self, channel):
@@ -94,7 +94,7 @@ class Patchbot():
 		"""
 		game_list = []
 		for game in self.game_list:
-			for channel_name in self.data['games'][game.name]['channels']:
+			for channel_name in self.config['games'][game.name]['channels']:
 				if channel_name == channel.name:
 					game_list.append(game)
 		return game_list
@@ -107,7 +107,7 @@ class Patchbot():
 		"""
 		channel_list = []
 		for channel in self.bot.get_all_channels():
-			for channel_name in self.data['games'][game.name]['channels']:
+			for channel_name in self.config['games'][game.name]['channels']:
 				if channel_name == channel.name:
 					channel_list.append(channel)
 		return channel_list
@@ -131,15 +131,15 @@ class Patchbot():
 		"""
 		Returns a discord embed object that contains the patch message for the
 		specified game.
+		A patch message must at least have a title and a link and the patch
+		description should not exceed 400 characters.
 		"""
 		embed = discord.Embed()
-		# A patch message must at least have a title and a link.
 		if game.patch["title"] is None or game.patch["url"] is None:
 			embed.title = "Error occurred when retrieving " + game.name + " patch notes"
 			return embed
 		embed.title = game.name + " - " + game.patch["title"]
 		embed.url = game.patch["url"]
-		# The patch description should not exceed 400 characters.
 		if game.patch["desc"] is not None:
 			desc = ""
 			game_strings = game.patch["desc"].split("\n")
@@ -182,14 +182,10 @@ def main():
 		try:
 			push_game_updates_task = patchbot.bot.loop.create_task(push_game_updates())
 			patchbot.bot.loop.run_until_complete(patchbot.bot.start(sys.argv[1]))
-		#except aiohttp.errors.ClientOSError:
-			#print("Could not connect to Discord, reconnecting...")
-			#push_game_updates_task.cancel()
-			#time.sleep(10)
-		#except RuntimeError as e:
-			#print("RuntimeError occured:\n\n" + str(e) + "\n\n")
-			#push_game_updates_task.cancel()
-			#time.sleep(60)
+		except aiohttp.client_exceptions.ClientConnectorError:
+			print("Could not connect to Discord, reconnecting...")
+			push_game_updates_task.cancel()
+			time.sleep(10)
 		except IndexError:
 			print("You must enter a bot token.")
 			print("Usage: python3 patchbot.py <bot-token>")
@@ -212,8 +208,9 @@ async def push_game_updates():
 	patches have their embed patch message pushed to their subscribed channels.
 	"""
 	await patchbot.bot.wait_until_ready()
-	while not patchbot.bot.is_closed:
-		await asyncio.sleep(300)
+	while True:
+		await asyncio.sleep(10)
+		print("\nReinitializing Games\n")
 		for game in patchbot.get_updated_games():
 			try:
 				for channel in patchbot.get_game_channels(game):
@@ -240,7 +237,6 @@ async def on_message(message):
 			for game in channel_games:
 				await message.channel.send(embed=patchbot.get_patch_message(game))
 
-	# TODO: Handle game names with spaces correctly.
 	if message.content.startswith('!patch '):
 		"""
 		Handles !patch command for a specific game.
@@ -248,10 +244,10 @@ async def on_message(message):
 		the channel that the message came from.
 		"""
 		for game in patchbot.game_list:
-			if message.content.split(" ")[1].lower() in game.names:
+			if message.content[7:].lower() in game.names:
 				await message.channel.send(embed=patchbot.get_patch_message(game))
 				return
-		await message.channel.send("Could not find patch info for " + message.content.split(" ")[1])
+		await message.channel.send("Could not find patch info for " + message.content[7:].lower())
 
 	if message.content == '!patchbot':
 		"""
@@ -281,4 +277,5 @@ async def on_ready():
 	# TODO: Presence not showing.
 	await patchbot.bot.change_presence(activity=discord.Activity(game=discord.Game(name="Patchbot | !patchbot")))
 
-main()
+if __name__ == '__main__':
+	main()
