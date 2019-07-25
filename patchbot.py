@@ -180,7 +180,7 @@ def main():
 	"""
 	while True:
 		try:
-			push_game_updates_task = patchbot.bot.loop.create_task(push_game_updates())
+			push_game_updates_task = asyncio.ensure_future(push_game_updates())
 			patchbot.bot.loop.run_until_complete(patchbot.bot.start(sys.argv[1]))
 		except aiohttp.client_exceptions.ClientConnectorError:
 			print("Could not connect to Discord, reconnecting...")
@@ -209,7 +209,7 @@ async def push_game_updates():
 	"""
 	await patchbot.bot.wait_until_ready()
 	while True:
-		await asyncio.sleep(10)
+		await asyncio.sleep(300)
 		print("\nReinitializing Games\n")
 		for game in patchbot.get_updated_games():
 			try:
